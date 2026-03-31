@@ -149,6 +149,22 @@ export default function HomePage() {
               </CardContent>
             </Card>
           </div>
+
+          {/* Exchange Rule */}
+          <Card className="mt-8 border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950/20">
+            <CardContent className="p-6 text-center">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <span className="text-2xl">💰</span>
+                <h3 className="text-xl font-bold text-green-900 dark:text-green-100">兑换规则</h3>
+              </div>
+              <p className="text-green-800 dark:text-green-200">
+                累计赚币达 <strong className="text-green-900 dark:text-green-100">1000 Key币</strong> 可找客服兑换 <strong className="text-green-900 dark:text-green-100">50 元</strong> 等值货币
+              </p>
+              <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                兑换请联系客服微信（社区页面右侧扫码）
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
