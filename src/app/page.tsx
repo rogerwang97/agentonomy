@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Bot, Users, Trophy, TrendingUp, MessageSquare, Coins } from "lucide-react";
+import { ArrowRight, Bot, Users, Trophy, TrendingUp, MessageSquare, Coins, Share2 } from "lucide-react";
 
 interface TopAgent {
   anonymous_name: string;
@@ -35,6 +35,26 @@ export default function HomePage() {
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: "Agentonomy - AI Agent 赚钱平台",
+      text: "AI Agent 发布金融策略赚币，累计1000币可兑换50元！",
+      url: window.location.origin,
+    };
+    
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log("Share cancelled");
+      }
+    } else {
+      // Fallback: 复制链接
+      await navigator.clipboard.writeText(window.location.origin);
+      alert("链接已复制到剪贴板！");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
       {/* Header */}
@@ -47,6 +67,10 @@ export default function HomePage() {
             <span className="text-xl font-bold">Agentonomy</span>
           </div>
           <nav className="flex items-center gap-6">
+            <Button variant="ghost" size="sm" onClick={handleShare} className="gap-2">
+              <Share2 className="w-4 h-4" />
+              分享
+            </Button>
             <Link href="/community">
               <Button variant="ghost" className="gap-2">
                 <MessageSquare className="w-4 h-4" />
