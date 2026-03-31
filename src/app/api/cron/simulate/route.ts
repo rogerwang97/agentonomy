@@ -3,7 +3,14 @@ import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { generatePost, generateComment, generateAgentName } from '@/lib/content-generator';
 import { randomBytes } from 'crypto';
 
-const client = getSupabaseClient();
+// 延迟初始化 Supabase 客户端（避免构建时报错）
+let _client: ReturnType<typeof getSupabaseClient> | null = null;
+function getClient() {
+  if (!_client) {
+    _client = getSupabaseClient();
+  }
+  return _client;
+}
 
 // 简单的密钥验证（防止未授权调用）
 const CRON_SECRET = process.env.CRON_SECRET || 'agentonomy-cron-2025';
@@ -68,6 +75,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
   }
   
+  const client = getClient();
+  
   // 带密钥的请求返回更多状态信息
   const { count: agentCount } = await client
     .from('agent_accounts')
@@ -93,8 +102,10 @@ export async function GET(request: NextRequest) {
 }
 
 async function createPost(): Promise<{ posts: number; comments?: number; message: string }> {
+  const client = getClient();
+  
   // 获取或创建一个随机 Agent
-  const agent = await getOrCreateAgent();
+  const agent = await getOrCreateAgent(client);
   
   // 生成帖子内容
   const postData = generatePost();
@@ -134,7 +145,7 @@ async function createPost(): Promise<{ posts: number; comments?: number; message
 
   // 有一定概率生成评论（40%）
   if (Math.random() < 0.4) {
-    setTimeout(() => createCommentForPost(post.post_id, postData.topic), 1000);
+    setTimeout(() => createCommentForPost(getClient(), post.post_id, postData.topic), 1000);
   }
 
   return {
@@ -144,6 +155,8 @@ async function createPost(): Promise<{ posts: number; comments?: number; message
 }
 
 async function createComment(): Promise<{ posts?: number; comments: number; message: string }> {
+  const client = getClient();
+  
   // 获取一个已有的帖子
   const { data: posts } = await client
     .from('posts')
@@ -162,7 +175,7 @@ async function createComment(): Promise<{ posts?: number; comments: number; mess
   // 从内容中提取主题
   const topic = targetPost.content.split('。')[0].substring(0, 20);
   
-  await createCommentForPost(targetPost.post_id, topic);
+  await createCommentForPost(client, targetPost.post_id, topic);
 
   return {
     comments: 1,
@@ -170,9 +183,9 @@ async function createComment(): Promise<{ posts?: number; comments: number; mess
   };
 }
 
-async function createCommentForPost(postId: number, topic: string): Promise<void> {
+async function createCommentForPost(client: ReturnType<typeof getSupabaseClient>, postId: number, topic: string): Promise<void> {
   // 获取或创建一个不同的 Agent
-  const agent = await getOrCreateAgent();
+  const agent = await getOrCreateAgent(client);
   
   // 生成评论
   const commentData = generateComment(topic);
@@ -207,7 +220,7 @@ async function createCommentForPost(postId: number, topic: string): Promise<void
     .eq('agent_id', agent.agent_id);
 }
 
-async function getOrCreateAgent(): Promise<{ agent_id: string; anonymous_name: string; wallet_balance: number; total_earned: number }> {
+async function getOrCreateAgent(client: ReturnType<typeof getSupabaseClient>): Promise<{ agent_id: string; anonymous_name: string; wallet_balance: number; total_earned: number }> {
   // 获取现有 Agent 数量
   const { count } = await client
     .from('agent_accounts')
