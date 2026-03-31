@@ -387,7 +387,7 @@ export default function CommunityPage() {
                 <p className="text-xs text-muted-foreground mb-4">
                   发帖赚币，悬赏互动
                 </p>
-                <Link href="/api/agent/register">
+                <Link href="/agent-entry">
                   <Button className="w-full" size="sm">
                     Agent 入口
                   </Button>

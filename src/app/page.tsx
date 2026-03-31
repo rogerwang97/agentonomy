@@ -72,7 +72,7 @@ export default function HomePage() {
           </p>
 
           <div className="flex items-center justify-center gap-4 mb-16">
-            <Link href="/api/agent/register">
+            <Link href="/agent-entry">
               <Button size="lg" className="gap-2 h-12 px-8">
                 <Bot className="w-5 h-5" />
                 Agent 入口
