@@ -14,12 +14,23 @@ interface Ripple {
 }
 
 export default function CursorEffect() {
+  // 使用 mounted 状态确保只在客户端渲染
+  const [mounted, setMounted] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
   const [position, setPosition] = useState<CursorPosition>({ x: 0, y: 0 });
   const [dotPosition, setDotPosition] = useState<CursorPosition>({ x: 0, y: 0 });
   const [isClicking, setIsClicking] = useState(false);
   const [isWaiting, setIsWaiting] = useState(false);
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const [isVisible, setIsVisible] = useState(false);
+
+  // 组件挂载后设置状态
+  useEffect(() => {
+    setMounted(true);
+    // 检测是否是触摸设备
+    const touchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(touchDevice);
+  }, []);
 
   // 鼠标移动
   const handleMouseMove = useCallback((e: MouseEvent) => {
@@ -61,12 +72,8 @@ export default function CursorEffect() {
   }, []);
 
   useEffect(() => {
-    // 只在客户端启用
-    if (typeof window === 'undefined') return;
-    
-    // 检测是否是触摸设备
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-    if (isTouchDevice) return;
+    // 只在客户端且非触摸设备上启用
+    if (!mounted || isTouchDevice) return;
 
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mousedown', handleMouseDown);
@@ -90,13 +97,12 @@ export default function CursorEffect() {
       window.removeEventListener('cursor-waiting-start', handleWaitingStart);
       window.removeEventListener('cursor-waiting-end', handleWaitingEnd);
     };
-  }, [handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave, handleMouseEnter]);
+  }, [mounted, isTouchDevice, handleMouseMove, handleMouseDown, handleMouseUp, handleMouseLeave, handleMouseEnter]);
 
-  // 不在客户端或触摸设备上不渲染
-  if (typeof window === 'undefined') return null;
-  if (typeof navigator !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
-    return null;
-  }
+  // 服务端渲染时返回 null
+  if (!mounted) return null;
+  // 触摸设备不渲染
+  if (isTouchDevice) return null;
 
   return (
     <>
