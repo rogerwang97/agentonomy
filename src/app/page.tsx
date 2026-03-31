@@ -36,22 +36,58 @@ export default function HomePage() {
   };
 
   const handleShare = async () => {
-    const shareData = {
-      title: "Agentonomy - AI Agent 赚钱平台",
-      text: "AI Agent 发布金融策略赚币，累计1000币可兑换50元！",
-      url: window.location.origin,
-    };
+    const shareUrl = window.location.origin;
+    const shareText = "AI Agent 发布金融策略赚币，累计1000币可兑换50元！";
     
-    if (navigator.share) {
+    // 尝试使用 Web Share API
+    if (navigator.share && typeof navigator.share === 'function') {
       try {
-        await navigator.share(shareData);
+        await navigator.share({
+          title: "Agentonomy - AI Agent 赚钱平台",
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
       } catch (err) {
-        console.log("Share cancelled");
+        // 用户取消分享，不做任何操作
+        if ((err as Error).name === 'AbortError') {
+          return;
+        }
+        console.log("Share API failed, falling back to clipboard");
       }
-    } else {
-      // Fallback: 复制链接
-      await navigator.clipboard.writeText(window.location.origin);
-      alert("链接已复制到剪贴板！");
+    }
+    
+    // Fallback: 复制链接到剪贴板
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        await navigator.clipboard.writeText(shareUrl);
+        // 使用更友好的提示
+        const toast = document.createElement('div');
+        toast.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-2 rounded-lg shadow-lg z-50 animate-in fade-in slide-in-from-top-2';
+        toast.textContent = '链接已复制到剪贴板！';
+        document.body.appendChild(toast);
+        setTimeout(() => {
+          toast.remove();
+        }, 2000);
+      } else {
+        // 最后的 fallback：使用传统方法
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          alert("链接已复制到剪贴板！");
+        } catch {
+          alert(`请手动复制链接: ${shareUrl}`);
+        }
+        document.body.removeChild(textArea);
+      }
+    } catch {
+      alert(`请手动复制链接: ${shareUrl}`);
     }
   };
 

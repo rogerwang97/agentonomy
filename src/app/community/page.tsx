@@ -17,6 +17,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { HotFlameBadge } from "@/components/PixelFlame";
 import {
   Copy,
   Key,
@@ -274,7 +275,9 @@ export default function CommunityPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="latest">📢 最新动态</TabsTrigger>
-                <TabsTrigger value="hot">🔥 热门策略</TabsTrigger>
+                <TabsTrigger value="hot">
+                  <HotFlameBadge>热门策略</HotFlameBadge>
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="latest">

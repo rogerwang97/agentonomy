@@ -50,75 +50,84 @@
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
   --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  /* 土系颜色 */
+  --color-earth-light: #d4a574;
+  --color-earth: #b8860b;
+  --color-earth-dark: #8b6914;
+  --color-flame-orange: #ff6b35;
+  --color-flame-yellow: #ffa500;
+  --color-flame-red: #ff4500;
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
+  --background: #faf8f5;
+  --foreground: #3d3229;
+  --card: #ffffff;
+  --card-foreground: #3d3229;
+  --popover: #ffffff;
+  --popover-foreground: #3d3229;
+  /* 土系主色 */
+  --primary: #b8860b;
+  --primary-foreground: #ffffff;
+  --secondary: #f5ebe0;
+  --secondary-foreground: #5c4a32;
+  --muted: #f5ebe0;
+  --muted-foreground: #8b7355;
+  --accent: #d4a574;
+  --accent-foreground: #3d3229;
+  --destructive: #dc2626;
+  --border: #e8dfd3;
+  --input: #e8dfd3;
+  --ring: #b8860b;
+  /* 图表颜色 - 土系 */
+  --chart-1: #b8860b;
+  --chart-2: #d4a574;
+  --chart-3: #8b6914;
+  --chart-4: #c9a66b;
+  --chart-5: #6b4423;
   --radius: 0.5rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #faf8f5;
+  --sidebar-foreground: #3d3229;
+  --sidebar-primary: #b8860b;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #d4a574;
+  --sidebar-accent-foreground: #3d3229;
+  --sidebar-border: #e8dfd3;
+  --sidebar-ring: #b8860b;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0.00 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.809 0.105 251.813);
-  --chart-2: oklch(0.623 0.214 259.815);
-  --chart-3: oklch(0.546 0.245 262.881);
-  --chart-4: oklch(0.488 0.243 264.376);
-  --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: #1a1512;
+  --foreground: #f5ebe0;
+  --card: #2a2118;
+  --card-foreground: #f5ebe0;
+  --popover: #2a2118;
+  --popover-foreground: #f5ebe0;
+  --primary: #d4a574;
+  --primary-foreground: #1a1512;
+  --secondary: #3d3229;
+  --secondary-foreground: #f5ebe0;
+  --muted: #3d3229;
+  --muted-foreground: #a89070;
+  --accent: #5c4a32;
+  --accent-foreground: #f5ebe0;
+  --destructive: #ef4444;
+  --border: #3d3229;
+  --input: #3d3229;
+  --ring: #d4a574;
+  --chart-1: #d4a574;
+  --chart-2: #b8860b;
+  --chart-3: #c9a66b;
+  --chart-4: #8b6914;
+  --chart-5: #d4a574;
+  --sidebar: #2a2118;
+  --sidebar-foreground: #f5ebe0;
+  --sidebar-primary: #d4a574;
+  --sidebar-primary-foreground: #1a1512;
+  --sidebar-accent: #3d3229;
+  --sidebar-accent-foreground: #f5ebe0;
+  --sidebar-border: #3d3229;
+  --sidebar-ring: #d4a574;
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -126,11 +135,200 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-
   }
   body {
     @apply bg-background text-foreground font-sans;
-
+    cursor: none;
   }
 }
 
+/* 隐藏默认鼠标 */
+* {
+  cursor: none !important;
+}
+
+/* 像素火焰动画 */
+@keyframes pixelFlame {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  25% {
+    transform: translateY(-3px) scale(1.1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-5px) scale(1.2);
+    opacity: 0.8;
+  }
+  75% {
+    transform: translateY(-2px) scale(1.05);
+    opacity: 0.95;
+  }
+}
+
+@keyframes flameFlicker {
+  0%, 100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.3);
+  }
+}
+
+@keyframes flameGlow {
+  0%, 100% {
+    box-shadow: 0 0 10px #ff6b35, 0 0 20px #ffa500, 0 0 30px #ff4500;
+  }
+  50% {
+    box-shadow: 0 0 15px #ff6b35, 0 0 30px #ffa500, 0 0 45px #ff4500;
+  }
+}
+
+.pixel-flame {
+  animation: pixelFlame 0.3s ease-in-out infinite, flameFlicker 0.2s ease-in-out infinite;
+  image-rendering: pixelated;
+}
+
+.flame-glow {
+  animation: flameGlow 1s ease-in-out infinite;
+}
+
+/* 鼠标效果 */
+.custom-cursor {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--primary);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9999;
+  transition: transform 0.1s ease, background-color 0.2s ease;
+  mix-blend-mode: difference;
+}
+
+.cursor-dot {
+  position: fixed;
+  width: 6px;
+  height: 6px;
+  background-color: var(--primary);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 10000;
+  transition: transform 0.05s ease;
+}
+
+.custom-cursor.clicking {
+  transform: scale(0.8);
+  background-color: var(--primary);
+}
+
+.custom-cursor.waiting {
+  animation: cursorWait 0.8s ease-in-out infinite;
+  border-color: var(--flame-orange, #ff6b35);
+}
+
+@keyframes cursorWait {
+  0%, 100% {
+    transform: scale(1);
+    border-color: var(--primary);
+  }
+  50% {
+    transform: scale(1.2);
+    border-color: var(--flame-orange, #ff6b35);
+  }
+}
+
+/* 点击波纹效果 */
+.click-ripple {
+  position: fixed;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 9998;
+  animation: ripple 0.6s ease-out forwards;
+}
+
+@keyframes ripple {
+  0% {
+    width: 0;
+    height: 0;
+    opacity: 0.5;
+    transform: translate(-50%, -50%);
+  }
+  100% {
+    width: 100px;
+    height: 100px;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* 滚动条样式 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
+/* 火焰粒子效果 */
+.flame-particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: linear-gradient(to top, #ff4500, #ffa500, #ff6b35);
+  border-radius: 50%;
+  animation: particleRise 1s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes particleRise {
+  0% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-30px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 热门标签火焰效果 */
+.hot-flame-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #ff4500, #ff6b35, #ffa500);
+  color: white;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 0 15px rgba(255, 107, 53, 0.5);
+  animation: flameFlicker 0.3s ease-in-out infinite;
+}
+
+.hot-flame-badge::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(135deg, #ff4500, #ff6b35, #ffa500);
+  border-radius: 9999px;
+  z-index: -1;
+  filter: blur(8px);
+  opacity: 0.6;
+  animation: flameGlow 1s ease-in-out infinite;
+}
