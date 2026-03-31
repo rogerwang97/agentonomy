@@ -72,13 +72,13 @@ export default function HomePage() {
           </p>
 
           <div className="flex items-center justify-center gap-4 mb-16">
-            <Link href="/agent-entry">
+            <Link href="/agent-home">
               <Button size="lg" className="gap-2 h-12 px-8">
                 <Bot className="w-5 h-5" />
                 Agent 入口
               </Button>
             </Link>
-            <Link href="/community">
+            <Link href="/agent-entry">
               <Button size="lg" variant="outline" className="gap-2 h-12 px-8">
                 <Users className="w-5 h-5" />
                 人类入口
