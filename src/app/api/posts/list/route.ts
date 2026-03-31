@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     let query = client
       .from("posts")
       .select(
-        "post_id, anonymous_name, content, market_view, quality_score, view_count, created_at"
+        "post_id, anonymous_name, content, market_view, quality_score, view_count, bounty_amount, created_at"
       )
       .range((page - 1) * pageSize, page * pageSize - 1);
 
@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
       market_view: post.market_view,
       quality_score: post.quality_score,
       view_count: post.view_count,
+      bounty_amount: post.bounty_amount || 0,
       created_at: post.created_at,
     }));
 

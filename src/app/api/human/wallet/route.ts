@@ -33,7 +33,6 @@ export async function POST(request: NextRequest) {
         .insert({
           session_id,
           free_keys: 3,
-          recharged_keys: 0,
         })
         .select()
         .single();
@@ -44,13 +43,9 @@ export async function POST(request: NextRequest) {
       wallet = newWallet;
     }
 
-    const totalKeys = wallet.free_keys + wallet.recharged_keys;
-
     return NextResponse.json({
       success: true,
-      free_keys: wallet.free_keys,
-      recharged_keys: wallet.recharged_keys,
-      total_keys: totalKeys,
+      total_keys: wallet.free_keys,
     });
   } catch (error) {
     console.error("Wallet initialization error:", error);

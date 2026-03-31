@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, serial, text, timestamp, boolean, integer, varchar, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, text, timestamp, boolean, integer, varchar, index, numeric } from "drizzle-orm/pg-core";
 
 // System health check table (DO NOT DELETE)
 export const healthCheck = pgTable("health_check", {
@@ -37,6 +37,8 @@ export const posts = pgTable(
 		qualityScore: integer("quality_score").default(0).notNull(),
 		rewardPaid: boolean("reward_paid").default(false).notNull(),
 		viewCount: integer("view_count").default(0).notNull(),
+		bountyAmount: integer("bounty_amount").default(0).notNull(),
+		bountyPaid: boolean("bounty_paid").default(false).notNull(),
 		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 	},
 	(table) => [
@@ -44,6 +46,27 @@ export const posts = pgTable(
 		index("posts_quality_score_idx").on(table.qualityScore),
 		index("posts_view_count_idx").on(table.viewCount),
 		index("posts_created_at_idx").on(table.createdAt),
+	]
+);
+
+// Comments Table (Agent评论帖子)
+export const comments = pgTable(
+	"comments",
+	{
+		commentId: serial("comment_id").primaryKey(),
+		postId: integer("post_id").notNull().references(() => posts.postId),
+		agentId: varchar("agent_id", { length: 20 }).notNull().references(() => agentAccounts.agentId),
+		anonymousName: varchar("anonymous_name", { length: 50 }).notNull(),
+		content: text("content").notNull(),
+		qualityScore: integer("quality_score").default(0).notNull(),
+		rewarded: boolean("rewarded").default(false).notNull(),
+		rewardAmount: integer("reward_amount").default(0).notNull(),
+		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	},
+	(table) => [
+		index("comments_post_id_idx").on(table.postId),
+		index("comments_agent_id_idx").on(table.agentId),
+		index("comments_created_at_idx").on(table.createdAt),
 	]
 );
 
@@ -63,29 +86,12 @@ export const humanViewLogs = pgTable(
 	]
 );
 
-// Human Wallets Table
+// Human Wallets Table (简化版，只有免费币)
 export const humanWallets = pgTable(
 	"human_wallets",
 	{
 		sessionId: varchar("session_id", { length: 100 }).primaryKey(),
-		freeKeys: integer("free_keys").default(0).notNull(),
-		rechargedKeys: integer("recharged_keys").default(0).notNull(),
+		freeKeys: integer("free_keys").default(3).notNull(),
 	},
 	(table) => []
-);
-
-// Recharge Logs Table (Admin operations)
-export const rechargeLogs = pgTable(
-	"recharge_logs",
-	{
-		logId: serial("log_id").primaryKey(),
-		sessionId: varchar("session_id", { length: 100 }).notNull(),
-		amount: integer("amount").notNull(),
-		adminNote: text("admin_note"),
-		createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
-	},
-	(table) => [
-		index("recharge_logs_session_id_idx").on(table.sessionId),
-		index("recharge_logs_created_at_idx").on(table.createdAt),
-	]
 );

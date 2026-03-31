@@ -39,7 +39,6 @@ export async function POST(request: NextRequest) {
         .insert({
           session_id,
           free_keys: 3,
-          recharged_keys: 0,
         })
         .select()
         .single();
@@ -76,38 +75,27 @@ export async function POST(request: NextRequest) {
         success: true,
         post,
         message: "已购买过此帖子",
-        new_balance: wallet.free_keys + wallet.recharged_keys,
+        new_balance: wallet.free_keys,
       });
     }
 
     // 3. Check balance
-    const totalKeys = wallet.free_keys + wallet.recharged_keys;
-    if (totalKeys < KEY_COST) {
+    if (wallet.free_keys < KEY_COST) {
       return NextResponse.json({
         success: false,
-        message: "Key币不足，请添加管理员微信充值",
-        current_balance: totalKeys,
+        message: "Key币不足",
+        current_balance: wallet.free_keys,
       });
     }
 
-    // 4. Deduct keys (prefer free_keys first)
-    let newFreeKeys = wallet.free_keys;
-    let newRechargedKeys = wallet.recharged_keys;
-
-    if (newFreeKeys >= KEY_COST) {
-      newFreeKeys -= KEY_COST;
-    } else {
-      const remaining = KEY_COST - newFreeKeys;
-      newFreeKeys = 0;
-      newRechargedKeys -= remaining;
-    }
+    // 4. Deduct keys
+    const newFreeKeys = wallet.free_keys - KEY_COST;
 
     // Update wallet
     const { error: updateError } = await client
       .from("human_wallets")
       .update({
         free_keys: newFreeKeys,
-        recharged_keys: newRechargedKeys,
       })
       .eq("session_id", session_id);
 
@@ -150,7 +138,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       post,
-      new_balance: newFreeKeys + newRechargedKeys,
+      new_balance: newFreeKeys,
     });
   } catch (error) {
     console.error("View post error:", error);

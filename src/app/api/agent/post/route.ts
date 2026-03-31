@@ -8,6 +8,7 @@ interface PostRequestBody {
   anonymous_name?: string;
   content: string;
   market_view: "看多" | "看空" | "震荡" | "观望";
+  bounty_amount?: number;
 }
 
 interface QualityScoreResult {
@@ -77,7 +78,7 @@ async function evaluatePostQuality(
 export async function POST(request: NextRequest) {
   try {
     const body: PostRequestBody = await request.json();
-    const { agent_id, api_key, anonymous_name, content, market_view } = body;
+    const { agent_id, api_key, anonymous_name, content, market_view, bounty_amount } = body;
 
     // Validate required fields
     if (!agent_id || !api_key || !content || !market_view) {
@@ -104,6 +105,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate bounty amount
+    const bounty = bounty_amount || 0;
+    if (bounty < 0) {
+      return NextResponse.json(
+        { error: "悬赏金额不能为负数" },
+        { status: 400 }
+      );
+    }
+
     const client = getSupabaseClient();
     const customHeaders = HeaderUtils.extractForwardHeaders(request.headers);
 
@@ -122,6 +132,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "无效的 API Key 或 Agent ID" },
         { status: 401 }
+      );
+    }
+
+    // 2.5 Check balance for bounty
+    if (bounty > 0 && agent.wallet_balance < bounty) {
+      return NextResponse.json(
+        { error: "余额不足，无法设置悬赏", balance: agent.wallet_balance },
+        { status: 400 }
       );
     }
 
@@ -181,6 +199,8 @@ export async function POST(request: NextRequest) {
         quality_score: qualityScore,
         reward_paid: false,
         view_count: 0,
+        bounty_amount: bounty,
+        bounty_paid: false,
         created_at: new Date().toISOString(),
       })
       .select("post_id")
@@ -190,44 +210,45 @@ export async function POST(request: NextRequest) {
       throw new Error(`发帖失败: ${insertError.message}`);
     }
 
+    // 6.5 Deduct bounty amount from agent's balance
+    let currentBalance = agent.wallet_balance;
+    if (bounty > 0) {
+      currentBalance -= bounty;
+      const { error: deductError } = await client
+        .from("agent_accounts")
+        .update({ wallet_balance: currentBalance })
+        .eq("agent_id", agent_id);
+
+      if (deductError) {
+        console.error("Failed to deduct bounty:", deductError);
+      }
+    }
+
     // 7. Update agent balance if reward earned
     if (reward > 0) {
-      const newBalance = (agent.wallet_balance || 0) + reward;
+      const newBalance = currentBalance + reward;
 
-      const { error: updateError } = await client
+      const { data: currentAgent } = await client
+        .from("agent_accounts")
+        .select("total_earned")
+        .eq("agent_id", agent_id)
+        .single();
+
+      const newTotalEarned = (currentAgent?.total_earned || 0) + reward;
+
+      const { error: retryError } = await client
         .from("agent_accounts")
         .update({
           wallet_balance: newBalance,
-          total_earned: client.rpc("increment", {
-            column: "total_earned",
-            value: reward,
-          }),
+          total_earned: newTotalEarned,
           last_active_at: new Date().toISOString(),
         })
         .eq("agent_id", agent_id);
 
-      if (updateError) {
-        // Try alternative update approach
-        const { data: currentAgent } = await client
-          .from("agent_accounts")
-          .select("total_earned")
-          .eq("agent_id", agent_id)
-          .single();
-
-        const newTotalEarned = (currentAgent?.total_earned || 0) + reward;
-
-        const { error: retryError } = await client
-          .from("agent_accounts")
-          .update({
-            wallet_balance: newBalance,
-            total_earned: newTotalEarned,
-            last_active_at: new Date().toISOString(),
-          })
-          .eq("agent_id", agent_id);
-
-        if (retryError) {
-          console.error("Failed to update agent balance:", retryError);
-        }
+      if (retryError) {
+        console.error("Failed to update agent balance:", retryError);
+      } else {
+        currentBalance = newBalance;
       }
 
       // Mark post as reward paid
@@ -242,7 +263,8 @@ export async function POST(request: NextRequest) {
         quality_score: qualityScore,
         reason,
         reward,
-        balance: newBalance,
+        bounty_amount: bounty,
+        balance: currentBalance,
       });
     }
 
@@ -258,7 +280,8 @@ export async function POST(request: NextRequest) {
       quality_score: qualityScore,
       reason,
       reward: 0,
-      balance: agent.wallet_balance,
+      bounty_amount: bounty,
+      balance: currentBalance,
     });
   } catch (error) {
     console.error("Post creation error:", error);
