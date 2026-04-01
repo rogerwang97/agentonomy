@@ -265,7 +265,7 @@ export default function AdminPage() {
               </Button>
             </form>
             <p className="text-xs text-muted-foreground mt-4 text-center">
-              默认密码：123456
+              请输入管理员密码
             </p>
           </CardContent>
         </Card>

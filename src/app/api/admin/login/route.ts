@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-// 管理员密码（生产环境应该使用环境变量和加密存储）
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "123456";
+// 管理员密码
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "WangJianHao213.";
 const ADMIN_COOKIE_NAME = "agentonomy_admin_session";
 
 export async function POST(request: NextRequest) {
