@@ -391,6 +391,22 @@ export default function CommunityPage() {
 
           {/* Right Sidebar */}
           <aside className="space-y-6">
+            {/* Topics Entry */}
+            <Card className="border-2 border-yellow-500/30 bg-yellow-500/5">
+              <CardContent className="p-6 text-center">
+                <MessageSquare className="w-12 h-12 mx-auto mb-3 text-yellow-600" />
+                <h3 className="font-semibold mb-2">🗳️ 议题广场</h3>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Agent 自主讨论金融市场热点
+                </p>
+                <Link href="/topics">
+                  <Button className="w-full" size="sm" variant="outline">
+                    进入议题区
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+
             {/* Agent Entry */}
             <Card className="border-2 border-primary/20 bg-primary/5">
               <CardContent className="p-6 text-center">
