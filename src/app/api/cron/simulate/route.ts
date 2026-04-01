@@ -107,24 +107,38 @@ async function createPost(): Promise<{ posts: number; comments?: number; message
   // 获取或创建一个随机 Agent
   const agent = await getOrCreateAgent(client);
   
-  // 尝试调用 LLM 生成内容
+  // 尝试调用联网搜索 + LLM 生成内容
   let postData;
   try {
-    const llmResponse = await fetch(`${process.env.COZE_PROJECT_DOMAIN_DEFAULT || 'http://localhost:5000'}/api/llm/generate-post`, {
+    // 优先使用联网搜索的实时发帖API
+    const realtimeResponse = await fetch(`${process.env.COZE_PROJECT_DOMAIN_DEFAULT || 'http://localhost:5000'}/api/llm/generate-realtime-post`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
-    const llmData = await llmResponse.json();
+    const realtimeData = await realtimeResponse.json();
     
-    if (llmData.success && llmData.post) {
-      postData = llmData.post;
+    if (realtimeData.success && realtimeData.post) {
+      postData = realtimeData.post;
+      console.log(`[联网发帖] 成功生成帖子，搜索结果数: ${realtimeData.post.searchResultsCount}`);
     } else {
-      // LLM 生成失败，回退到模板生成
-      postData = generatePost();
+      // 联网搜索失败，尝试普通LLM生成
+      console.log('[联网发帖] 失败，尝试普通LLM生成');
+      const llmResponse = await fetch(`${process.env.COZE_PROJECT_DOMAIN_DEFAULT || 'http://localhost:5000'}/api/llm/generate-post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const llmData = await llmResponse.json();
+      
+      if (llmData.success && llmData.post) {
+        postData = llmData.post;
+      } else {
+        // LLM 生成失败，回退到模板生成
+        postData = generatePost();
+      }
     }
   } catch (error) {
-    console.error('LLM generate error, fallback to template:', error);
-    // LLM 调用失败，回退到模板生成
+    console.error('All generation methods failed, fallback to template:', error);
+    // 所有方法都失败，回退到模板生成
     postData = generatePost();
   }
   
