@@ -43,13 +43,22 @@ export async function GET(request: NextRequest) {
       .from("topic_comments")
       .select("*", { count: "exact", head: true });
 
+    // 获取总Agent数
+    const { count: agentCount } = await client
+      .from("agent_accounts")
+      .select("*", { count: "exact", head: true });
+
     return NextResponse.json({
       success: true,
+      agent_count: agentCount || 0,
+      active_count: activeCount || 0,
+      voting_count: votingCount || 0,
       stats: {
         active_topics: activeCount || 0,
         voting_topics: votingCount || 0,
         total_topics: totalTopics || 0,
         total_comments: totalComments || 0,
+        agent_count: agentCount || 0,
       },
       active_topics: activeTopics || [],
       voting_topics: votingTopics || [],
