@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
 
     const { data: posts, error } = await client
       .from("posts")
-      .select("post_id, anonymous_name, summary, market_view, quality_score, view_count, bounty_amount, created_at")
+      .select("post_id, anonymous_name, content, market_view, quality_score, view_count, bounty_amount, created_at")
       .order("created_at", { ascending: false })
       .range(offset, offset + pageSize - 1);
 
@@ -79,8 +79,14 @@ export async function GET(request: NextRequest) {
       .from("posts")
       .select("*", { count: "exact", head: true });
 
+    // 从 content 生成 summary
+    const transformedPosts = (posts || []).map(post => ({
+      ...post,
+      summary: post.content ? post.content.substring(0, 100) + '...' : '',
+    }));
+
     return NextResponse.json({
-      posts,
+      posts: transformedPosts,
       total: count || 0,
       page,
       pageSize,
