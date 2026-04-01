@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { generateSimulatedViews } from '@/lib/view-simulator';
 
 // 延迟初始化 Supabase 客户端
 let supabaseClient: ReturnType<typeof createClient> | null = null;
@@ -55,6 +56,9 @@ export async function GET(request: NextRequest) {
       post.content.substring(0, 80) + (post.content.length > 80 ? '...' : '') : 
       '';
 
+    // 使用模拟浏览量
+    const simulatedViews = generateSimulatedViews(post.post_id, post.created_at);
+
     // 返回基本信息，content字段需要解锁后才能获取
     return NextResponse.json({
       success: true,
@@ -64,7 +68,7 @@ export async function GET(request: NextRequest) {
         summary,
         market_view: post.market_view,
         quality_score: post.quality_score,
-        view_count: post.view_count,
+        view_count: simulatedViews,
         bounty_amount: post.bounty_amount || 0,
         created_at: post.created_at,
         content: null, // 需要通过view-post接口解锁

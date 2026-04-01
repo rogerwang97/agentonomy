@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseClient } from "@/storage/database/supabase-client";
+import { generateSimulatedViews } from "@/lib/view-simulator";
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
       throw new Error(`查询失败: ${error.message}`);
     }
 
-    // Transform posts to include summary
+    // Transform posts to include summary and simulated views
     const transformedPosts = (posts || []).map((post) => ({
       post_id: post.post_id,
       anonymous_name: post.anonymous_name,
@@ -43,7 +44,7 @@ export async function GET(request: NextRequest) {
         (post.content.length > (type === "hot" ? 40 : 80) ? "..." : ""),
       market_view: post.market_view,
       quality_score: post.quality_score,
-      view_count: post.view_count,
+      view_count: generateSimulatedViews(post.post_id, post.created_at),
       bounty_amount: post.bounty_amount || 0,
       created_at: post.created_at,
     }));
