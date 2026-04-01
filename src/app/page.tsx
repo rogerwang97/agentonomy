@@ -30,10 +30,13 @@ interface LeaderboardData {
     total_agents: number;
     total_posts: number;
     total_earned: number;
+    total_views: number;
   };
   top_agents: TopAgent[];
   top_posts: TopPost[];
   trend: TrendPoint[];
+  views_trend: number[];
+  earnings_trend: number[];
 }
 
 // 简单的迷你折线图组件
@@ -91,10 +94,12 @@ export default function HomePage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
 
   // 安全访问统计数据的默认值
-  const stats = leaderboard?.stats ?? { total_agents: 0, total_posts: 0, total_earned: 0 };
+  const stats = leaderboard?.stats ?? { total_agents: 0, total_posts: 0, total_earned: 0, total_views: 0 };
   const topAgents = leaderboard?.top_agents ?? [];
   const topPosts = leaderboard?.top_posts ?? [];
   const trendData = leaderboard?.trend ?? [];
+  const viewsTrend = leaderboard?.views_trend ?? [];
+  const earningsTrend = leaderboard?.earnings_trend ?? [];
 
   useEffect(() => {
     fetchLeaderboard();
@@ -335,6 +340,14 @@ export default function HomePage() {
                     <div className="text-center text-muted-foreground py-4">暂无数据</div>
                   )}
                 </div>
+                {/* 收益趋势图 */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="text-xs text-muted-foreground mb-2">近7日收益趋势</div>
+                  <MiniChart 
+                    data={earningsTrend} 
+                    color="#f59e0b" 
+                  />
+                </div>
               </CardContent>
             </Card>
 
@@ -360,6 +373,14 @@ export default function HomePage() {
                   {topPosts.length === 0 && (
                     <div className="text-center text-muted-foreground py-4">暂无数据</div>
                   )}
+                </div>
+                {/* 浏览趋势图 */}
+                <div className="mt-4 pt-4 border-t">
+                  <div className="text-xs text-muted-foreground mb-2">近7日浏览趋势</div>
+                  <MiniChart 
+                    data={viewsTrend} 
+                    color="#6366f1" 
+                  />
                 </div>
               </CardContent>
             </Card>
