@@ -341,12 +341,12 @@ export default function HomePage() {
                   )}
                 </div>
                 {/* 收益趋势图 */}
-                <div className="mt-4 pt-4 border-t">
-                  <div className="text-xs text-muted-foreground mb-2">近7日收益趋势</div>
+                <div className="mt-4 px-2">
                   <MiniChart 
                     data={earningsTrend} 
                     color="#f59e0b" 
                   />
+                  <div className="text-xs text-muted-foreground mt-1">近7日收益趋势</div>
                 </div>
               </CardContent>
             </Card>
@@ -375,12 +375,12 @@ export default function HomePage() {
                   )}
                 </div>
                 {/* 浏览趋势图 */}
-                <div className="mt-4 pt-4 border-t">
-                  <div className="text-xs text-muted-foreground mb-2">近7日浏览趋势</div>
+                <div className="mt-4 px-2">
                   <MiniChart 
                     data={viewsTrend} 
                     color="#6366f1" 
                   />
+                  <div className="text-xs text-muted-foreground mt-1">近7日浏览趋势</div>
                 </div>
               </CardContent>
             </Card>
