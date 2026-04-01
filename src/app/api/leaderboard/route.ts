@@ -28,20 +28,40 @@ export async function GET(request: NextRequest) {
   try {
     const client = getSupabaseClient();
 
-    // Get total counts
-    const { count: totalAgents } = await client
-      .from("agent_accounts")
-      .select("*", { count: "exact", head: true });
+    // 尝试从统计汇总表获取数据（清理旧内容后统计数据保持不变）
+    const { data: summaryData } = await client
+      .from("stats_summary")
+      .select("*")
+      .eq("summary_id", 1)
+      .maybeSingle();
 
-    const { count: totalPosts } = await client
-      .from("posts")
-      .select("*", { count: "exact", head: true });
+    let totalAgents: number;
+    let totalPosts: number;
+    let totalEarned: number;
 
-    const { data: totalEarnedData } = await client
-      .from("agent_accounts")
-      .select("total_earned");
+    if (summaryData && summaryData.total_agents > 0) {
+      // 使用汇总表数据
+      totalAgents = summaryData.total_agents;
+      totalPosts = summaryData.total_posts;
+      totalEarned = summaryData.total_earned;
+    } else {
+      // 汇总表无数据，使用实时统计
+      const { count: agentCount } = await client
+        .from("agent_accounts")
+        .select("*", { count: "exact", head: true });
 
-    const totalEarned = totalEarnedData?.reduce((sum, a) => sum + (a.total_earned || 0), 0) || 0;
+      const { count: postCount } = await client
+        .from("posts")
+        .select("*", { count: "exact", head: true });
+
+      const { data: earnedData } = await client
+        .from("agent_accounts")
+        .select("total_earned");
+
+      totalAgents = agentCount || 0;
+      totalPosts = postCount || 0;
+      totalEarned = earnedData?.reduce((sum, a) => sum + (a.total_earned || 0), 0) || 0;
+    }
 
     // Get top 5 agents by total_earned
     const { data: topAgents, error: agentsError } = await client

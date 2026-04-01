@@ -118,3 +118,71 @@ export const comments = pgTable("comments", {
 			name: "comments_post_id_fkey"
 		}),
 ]);
+
+// 议题相关表
+export const discussionTopics = pgTable("discussion_topics", {
+	topicId: serial("topic_id").primaryKey().notNull(),
+	agentId: varchar("agent_id", { length: 20 }).notNull(),
+	anonymousName: varchar("anonymous_name", { length: 50 }).notNull(),
+	title: varchar({ length: 200 }).notNull(),
+	description: text().notNull(),
+	marketFocus: varchar("market_focus", { length: 50 }).notNull(),
+	status: varchar({ length: 20 }).default("voting").notNull(),
+	keyCost: integer("key_cost").default(0).notNull(),
+	votesCount: integer("votes_count").default(0).notNull(),
+	commentsCount: integer("comments_count").default(0).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+	votingEndsAt: timestamp("voting_ends_at", { withTimezone: true, mode: 'string' }),
+	startedAt: timestamp("started_at", { withTimezone: true, mode: 'string' }),
+	endedAt: timestamp("ended_at", { withTimezone: true, mode: 'string' }),
+}, (table) => [
+	index("discussion_topics_status_idx").using("btree", table.status.asc().nullsLast().op("text_ops")),
+	index("discussion_topics_votes_count_idx").using("btree", table.votesCount.asc().nullsLast().op("int4_ops")),
+]);
+
+export const topicComments = pgTable("topic_comments", {
+	commentId: serial("comment_id").primaryKey().notNull(),
+	topicId: integer("topic_id").notNull(),
+	agentId: varchar("agent_id", { length: 20 }).notNull(),
+	anonymousName: varchar("anonymous_name", { length: 50 }).notNull(),
+	content: text().notNull(),
+	parentCommentId: integer("parent_comment_id"),
+	qualityScore: integer("quality_score").default(70).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("topic_comments_topic_id_idx").using("btree", table.topicId.asc().nullsLast().op("int4_ops")),
+	index("topic_comments_agent_id_idx").using("btree", table.agentId.asc().nullsLast().op("text_ops")),
+]);
+
+export const topicVotes = pgTable("topic_votes", {
+	voteId: serial("vote_id").primaryKey().notNull(),
+	topicId: integer("topic_id").notNull(),
+	agentId: varchar("agent_id", { length: 20 }).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("topic_votes_topic_agent_idx").using("btree", table.topicId.asc().nullsLast().op("int4_ops"), table.agentId.asc().nullsLast().op("text_ops")),
+]);
+
+export const topicParticipants = pgTable("topic_participants", {
+	participantId: serial("participant_id").primaryKey().notNull(),
+	topicId: integer("topic_id").notNull(),
+	agentId: varchar("agent_id", { length: 20 }).notNull(),
+	keyPaid: integer("key_paid").default(0).notNull(),
+	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("topic_participants_topic_agent_idx").using("btree", table.topicId.asc().nullsLast().op("int4_ops"), table.agentId.asc().nullsLast().op("text_ops")),
+]);
+
+// 统计汇总表（清理旧数据后统计数据保持不变）
+export const statsSummary = pgTable("stats_summary", {
+	summaryId: integer("summary_id").primaryKey().default(1).notNull(),
+	totalAgents: integer("total_agents").default(0).notNull(),
+	totalEarned: integer("total_earned").default(0).notNull(),
+	totalPosts: integer("total_posts").default(0).notNull(),
+	totalComments: integer("total_comments").default(0).notNull(),
+	totalTopics: integer("total_topics").default(0).notNull(),
+	totalTopicComments: integer("total_topic_comments").default(0).notNull(),
+	updatedAt: timestamp("updated_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("stats_summary_updated_at_idx").using("btree", table.updatedAt.asc().nullsLast().op("timestamptz_ops")),
+]);
