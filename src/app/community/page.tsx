@@ -283,41 +283,40 @@ export default function CommunityPage() {
               <TabsContent value="latest">
                 <div className="space-y-3">
                   {latestPosts.map((post) => (
-                    <Card key={post.post_id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{post.anonymous_name}</span>
-                            <Badge variant="secondary" className={getMarketViewBadge(post.market_view)}>
-                              {getMarketViewIcon(post.market_view)}
-                              <span className="ml-1">{post.market_view}</span>
-                            </Badge>
-                            {post.bounty_amount && post.bounty_amount > 0 && (
-                              <Badge variant="outline" className="text-yellow-700 border-yellow-300">
-                                <Coins className="w-3 h-3 mr-1" />
-                                悬赏 {post.bounty_amount}
+                    <Link key={post.post_id} href={`/posts/${post.post_id}`}>
+                      <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{post.anonymous_name}</span>
+                              <Badge variant="secondary" className={getMarketViewBadge(post.market_view)}>
+                                {getMarketViewIcon(post.market_view)}
+                                <span className="ml-1">{post.market_view}</span>
                               </Badge>
-                            )}
+                              {post.bounty_amount && post.bounty_amount > 0 && (
+                                <Badge variant="outline" className="text-yellow-700 border-yellow-300">
+                                  <Coins className="w-3 h-3 mr-1" />
+                                  悬赏 {post.bounty_amount}
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-muted-foreground">
+                              {formatTime(post.created_at)}
+                            </span>
                           </div>
-                          <span className="text-xs text-muted-foreground">
-                            {formatTime(post.created_at)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-3">
-                          {expandedPosts.has(post.post_id)
-                            ? post.summary.replace("...", "")
-                            : post.summary}
-                        </p>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleExpandPost(post.post_id)}
-                          className="text-xs"
-                        >
-                          {expandedPosts.has(post.post_id) ? "收起" : "阅读全文"}
-                        </Button>
-                      </CardContent>
-                    </Card>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                            {post.summary}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-primary">点击查看详情 →</span>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Eye className="w-3 h-3" />
+                              <span>{post.view_count}</span>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                   {latestPosts.length === 0 && (
                     <Card>
@@ -335,38 +334,41 @@ export default function CommunityPage() {
                 </p>
                 <div className="space-y-3">
                   {hotPosts.map((post) => (
-                    <Card key={post.post_id}>
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{post.anonymous_name}</span>
-                            <Badge variant="secondary" className={getMarketViewBadge(post.market_view)}>
-                              {getMarketViewIcon(post.market_view)}
-                              <span className="ml-1">{post.market_view}</span>
-                            </Badge>
-                            {post.bounty_amount && post.bounty_amount > 0 && (
-                              <Badge variant="outline" className="text-yellow-700 border-yellow-300">
-                                <Coins className="w-3 h-3 mr-1" />
-                                悬赏 {post.bounty_amount}
+                    <Link key={post.post_id} href={`/posts/${post.post_id}`}>
+                      <Card className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <CardContent className="p-4">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{post.anonymous_name}</span>
+                              <Badge variant="secondary" className={getMarketViewBadge(post.market_view)}>
+                                {getMarketViewIcon(post.market_view)}
+                                <span className="ml-1">{post.market_view}</span>
                               </Badge>
-                            )}
+                              {post.bounty_amount && post.bounty_amount > 0 && (
+                                <Badge variant="outline" className="text-yellow-700 border-yellow-300">
+                                  <Coins className="w-3 h-3 mr-1" />
+                                  悬赏 {post.bounty_amount}
+                                </Badge>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>评分: {post.quality_score}</span>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>评分: {post.quality_score}</span>
+                          <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{post.summary}</p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-1 text-xs text-primary">
+                              <Key className="w-3 h-3" />
+                              <span>消耗5币解锁详情</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Eye className="w-3 h-3" />
+                              <span>{post.view_count}</span>
+                            </div>
                           </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-3">{post.summary}</p>
-                        <Button
-                          size="sm"
-                          onClick={() => handleViewHotPost(post)}
-                          disabled={isLoading}
-                          className="text-xs"
-                        >
-                          <Key className="w-3 h-3 mr-1" />
-                          消耗5币查看详情
-                        </Button>
-                      </CardContent>
-                    </Card>
+                        </CardContent>
+                      </Card>
+                    </Link>
                   ))}
                   {hotPosts.length === 0 && (
                     <Card>
