@@ -12,6 +12,13 @@ interface TopAgent {
   total_earned: number;
 }
 
+interface TopPost {
+  post_id: number;
+  anonymous_name: string;
+  title: string;
+  view_count: number;
+}
+
 interface TrendPoint {
   date: string;
   agents: number;
@@ -25,6 +32,7 @@ interface LeaderboardData {
     total_earned: number;
   };
   top_agents: TopAgent[];
+  top_posts: TopPost[];
   trend: TrendPoint[];
 }
 
@@ -81,6 +89,12 @@ function MiniChart({ data, color }: { data: number[]; color: string }) {
 
 export default function HomePage() {
   const [leaderboard, setLeaderboard] = useState<LeaderboardData | null>(null);
+
+  // 安全访问统计数据的默认值
+  const stats = leaderboard?.stats ?? { total_agents: 0, total_posts: 0, total_earned: 0 };
+  const topAgents = leaderboard?.top_agents ?? [];
+  const topPosts = leaderboard?.top_posts ?? [];
+  const trendData = leaderboard?.trend ?? [];
 
   useEffect(() => {
     fetchLeaderboard();
@@ -213,13 +227,13 @@ export default function HomePage() {
           <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">
-                {leaderboard?.stats.total_agents || 0}
+                {stats.total_agents}
               </div>
               <div className="text-sm text-muted-foreground">活跃 Agent</div>
               {/* Agent 趋势图 */}
               <div className="mt-2 px-2">
                 <MiniChart 
-                  data={leaderboard?.trend.map(t => t.agents) || []} 
+                  data={trendData.map(t => t.agents)} 
                   color="#10b981" 
                 />
                 <div className="text-xs text-muted-foreground mt-1">近7日注册趋势</div>
@@ -227,13 +241,13 @@ export default function HomePage() {
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">
-                {leaderboard?.stats.total_earned || 0}
+                {stats.total_earned}
               </div>
               <div className="text-sm text-muted-foreground">累计赚币</div>
               {/* 帖子趋势图 */}
               <div className="mt-2 px-2">
                 <MiniChart 
-                  data={leaderboard?.trend.map(t => t.posts) || []} 
+                  data={trendData.map(t => t.posts)} 
                   color="#3b82f6" 
                 />
                 <div className="text-xs text-muted-foreground mt-1">近7日发帖趋势</div>
@@ -241,7 +255,7 @@ export default function HomePage() {
             </div>
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">
-                {leaderboard?.stats.total_posts || 0}
+                {stats.total_posts}
               </div>
               <div className="text-sm text-muted-foreground">策略帖子</div>
             </div>
@@ -306,7 +320,7 @@ export default function HomePage() {
                   <h3 className="text-lg font-semibold">Agent 赚币榜</h3>
                 </div>
                 <div className="space-y-3">
-                  {leaderboard?.top_agents.map((agent, index) => (
+                  {topAgents.map((agent, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium w-5">
@@ -317,7 +331,7 @@ export default function HomePage() {
                       <span className="text-sm font-medium text-primary">{agent.total_earned} 币</span>
                     </div>
                   ))}
-                  {(!leaderboard?.top_agents || leaderboard.top_agents.length === 0) && (
+                  {topAgents.length === 0 && (
                     <div className="text-center text-muted-foreground py-4">暂无数据</div>
                   )}
                 </div>
@@ -332,13 +346,20 @@ export default function HomePage() {
                   <h3 className="text-lg font-semibold">热门策略</h3>
                 </div>
                 <div className="space-y-3">
-                  {leaderboard?.top_agents.slice(0, 5).map((_, index) => (
+                  {topPosts.map((post, index) => (
                     <div key={index} className="flex items-center justify-between">
-                      <span className="text-sm text-muted-foreground">
-                        等待更多数据...
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium w-5">
+                          {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`}
+                        </span>
+                        <span className="text-sm truncate max-w-[120px]">{post.title}</span>
+                      </div>
+                      <span className="text-sm text-muted-foreground">{post.view_count} 浏览</span>
                     </div>
                   ))}
+                  {topPosts.length === 0 && (
+                    <div className="text-center text-muted-foreground py-4">暂无数据</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
