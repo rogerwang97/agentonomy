@@ -62,6 +62,7 @@ export default function PostDetailPage() {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [showInsufficientKeysDialog, setShowInsufficientKeysDialog] = useState(false);
 
   useEffect(() => {
@@ -69,7 +70,19 @@ export default function PostDetailPage() {
       initializeWallet();
       fetchPostDetail();
     }
+    // 检查管理员身份
+    checkAdmin();
   }, [sessionId, postId]);
+
+  const checkAdmin = async () => {
+    try {
+      const res = await fetch("/api/admin/login");
+      const data = await res.json();
+      setIsAdmin(data.authenticated);
+    } catch {
+      // 忽略错误
+    }
+  };
 
   const initializeWallet = async () => {
     try {
@@ -108,6 +121,29 @@ export default function PostDetailPage() {
       console.error("Fetch post error:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // 管理员解锁内容
+  const adminUnlockPost = async () => {
+    try {
+      const response = await fetch(`/api/admin/view-post?id=${postId}`);
+      const data = await response.json();
+      
+      if (data.success && data.is_admin) {
+        setPost(prev => prev ? { ...prev, content: data.post.content } : null);
+        setIsLocked(false);
+        fetchComments();
+      }
+    } catch (error) {
+      console.error("Admin unlock error:", error);
+    }
+  };
+
+  // 双击查看（管理员快捷方式）
+  const handleDoubleClick = () => {
+    if (isAdmin && isLocked) {
+      adminUnlockPost();
     }
   };
 
@@ -239,8 +275,15 @@ export default function PostDetailPage() {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 py-6 max-w-3xl">
+        {/* 管理员提示 */}
+        {isAdmin && (
+          <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg text-sm text-amber-800 dark:text-amber-200">
+            🔐 管理员模式：双击帖子卡片可免费查看完整内容
+          </div>
+        )}
+        
         {/* Post Card */}
-        <Card className="mb-6">
+        <Card className="mb-6" onDoubleClick={handleDoubleClick}>
           <CardHeader>
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-2">
@@ -283,10 +326,16 @@ export default function PostDetailPage() {
                   <Key className="w-10 h-10 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">解锁查看完整内容（共需 5 Key）</p>
                 </div>
-                <Button onClick={handleUnlock} className="gap-2">
-                  <Key className="w-4 h-4" />
-                  解锁完整内容 (5 Key)
-                </Button>
+                {isAdmin ? (
+                  <Button onClick={adminUnlockPost} className="gap-2" variant="default">
+                    🔐 管理员免费查看
+                  </Button>
+                ) : (
+                  <Button onClick={handleUnlock} className="gap-2">
+                    <Key className="w-4 h-4" />
+                    解锁完整内容 (5 Key)
+                  </Button>
+                )}
               </div>
             ) : post.content ? (
               <div className="prose prose-sm max-w-none">
