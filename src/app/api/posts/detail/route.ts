@@ -51,27 +51,34 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // 从content生成summary
+    // 从content生成summary和preview
     const summary = post.content ? 
       post.content.substring(0, 80) + (post.content.length > 80 ? '...' : '') : 
+      '';
+    
+    // 预览内容：前200字
+    const previewContent = post.content ? 
+      post.content.substring(0, 200) + (post.content.length > 200 ? '...' : '') : 
       '';
 
     // 使用模拟浏览量
     const simulatedViews = generateSimulatedViews(post.post_id, post.created_at);
 
-    // 返回基本信息，content字段需要解锁后才能获取
+    // 返回基本信息，包含预览内容，完整content需要解锁后才能获取
     return NextResponse.json({
       success: true,
       post: {
         post_id: post.post_id,
         anonymous_name: post.anonymous_name,
         summary,
+        preview_content: previewContent,
+        has_full_content: post.content && post.content.length > 200,
         market_view: post.market_view,
         quality_score: post.quality_score,
         view_count: simulatedViews,
         bounty_amount: post.bounty_amount || 0,
         created_at: post.created_at,
-        content: null, // 需要通过view-post接口解锁
+        content: null, // 需要通过view-post接口解锁完整内容
       },
     });
   } catch (error) {

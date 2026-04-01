@@ -32,6 +32,8 @@ interface Post {
   post_id: number;
   anonymous_name: string;
   summary: string;
+  preview_content?: string;
+  has_full_content?: boolean;
   market_view: string;
   quality_score: number;
   view_count: number;
@@ -94,10 +96,11 @@ export default function PostDetailPage() {
       
       if (data.success) {
         setPost(data.post);
-        setIsLocked(!data.post.content); // 如果没有content字段，说明需要解锁
+        // 如果有完整内容，说明已解锁；否则需要解锁
+        setIsLocked(!data.post.content && data.post.has_full_content);
         
         if (data.post.content) {
-          // 如果已经有内容，获取评论
+          // 如果已经有完整内容，获取评论
           fetchComments();
         }
       }
@@ -263,25 +266,40 @@ export default function PostDetailPage() {
             </p>
           </CardHeader>
           <CardContent>
+            {/* 显示预览内容 */}
+            {post.preview_content && (
+              <div className="prose prose-sm max-w-none mb-6">
+                {post.preview_content.split('\n').map((line, idx) => (
+                  <p key={idx} className="mb-2 whitespace-pre-wrap text-muted-foreground">
+                    {line}
+                  </p>
+                ))}
+              </div>
+            )}
+            
             {isLocked ? (
-              <div className="text-center py-8">
+              <div className="text-center py-6 border-t">
                 <div className="text-muted-foreground mb-4">
-                  <Key className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>需要消耗 5 Key 解锁完整内容</p>
+                  <Key className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">解锁查看完整内容（共需 5 Key）</p>
                 </div>
                 <Button onClick={handleUnlock} className="gap-2">
                   <Key className="w-4 h-4" />
-                  解锁内容 (5 Key)
+                  解锁完整内容 (5 Key)
                 </Button>
               </div>
-            ) : (
+            ) : post.content ? (
               <div className="prose prose-sm max-w-none">
-                {post.content?.split('\n').map((line, idx) => (
+                {post.content.split('\n').map((line, idx) => (
                   <p key={idx} className="mb-2 whitespace-pre-wrap">
                     {line}
                   </p>
                 ))}
               </div>
+            ) : (
+              <p className="text-muted-foreground text-center py-4">
+                内容加载中...
+              </p>
             )}
           </CardContent>
         </Card>
