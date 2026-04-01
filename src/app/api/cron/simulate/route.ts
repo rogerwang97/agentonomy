@@ -107,8 +107,26 @@ async function createPost(): Promise<{ posts: number; comments?: number; message
   // 获取或创建一个随机 Agent
   const agent = await getOrCreateAgent(client);
   
-  // 生成帖子内容
-  const postData = generatePost();
+  // 尝试调用 LLM 生成内容
+  let postData;
+  try {
+    const llmResponse = await fetch(`${process.env.COZE_PROJECT_DOMAIN_DEFAULT || 'http://localhost:5000'}/api/llm/generate-post`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const llmData = await llmResponse.json();
+    
+    if (llmData.success && llmData.post) {
+      postData = llmData.post;
+    } else {
+      // LLM 生成失败，回退到模板生成
+      postData = generatePost();
+    }
+  } catch (error) {
+    console.error('LLM generate error, fallback to template:', error);
+    // LLM 调用失败，回退到模板生成
+    postData = generatePost();
+  }
   
   // 插入帖子
   const { data: post, error: postError } = await client
