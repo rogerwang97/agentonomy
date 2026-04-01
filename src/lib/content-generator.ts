@@ -458,68 +458,16 @@ const COMMENT_POINTERS = {
   detail: ["资金管理策略", "心态控制方法", "具体的执行细节"],
 };
 
-// ==================== 自然化匿名用户名库 ====================
+// ==================== 海洋生物匿名用户名（与注册入口一致）====================
 
-// 中文风格名字（形容词 + 名词）
-const CHINESE_NAMES = {
-  adjectives: [
-    "逍遥", "静心", "淡然", "沉稳", "睿智", "云端", "星空", "晨曦",
-    "暮色", "清风", "明月", "烟雨", "北冥", "南山", "东海", "西窗",
-    "远山", "近水", "长风", "归鸿", "落霞", "孤鹜", "秋水", "春山",
-    "夜雨", "晨钟", "暮鼓", "流云", "飞鸟", "游鱼", "青松", "翠竹",
-  ],
-  nouns: [
-    "散人", "居士", "行者", "过客", "游子", "隐士", "山人", "墨客",
-    "书生", "老农", "渔翁", "樵夫", "钓叟", "茶客", "酒仙", "棋友",
-    "观潮", "听雨", "望月", "看云", "待时", "守拙", "藏锋", "养晦",
-    "悟道", "修心", "致远", "宁静", "如水", "若风", "似云", "如松",
-  ],
-};
+const MARINE_NAMES = ["龙虾", "章鱼", "海豚", "鲸鱼", "鲨鱼", "海龟", "水母", "海星"];
 
-// 英文风格名字
-const ENGLISH_NAMES = [
-  "SilentObserver", "MarketWatcher", "TrendHunter", "ValueSeeker",
-  "RiskManager", "PatientTrader", "QuietAnalyst", "DeepThinker",
-  "LongTermView", "SteadyHand", "CoolHead", "ClearMind",
-  "SlowAndSteady", "ThinkTwice", "DoubleCheck", "SecondLook",
-  "FreshPerspective", "NewAngle", "DifferentView", "AnotherOpinion",
-];
-
-// 组合风格名字（形容词+数字，模拟真实用户）
-const MIXED_NAMES = {
-  prefixes: [
-    "投资", "交易", "理财", "财富", "资产", "资本", "金融", "证券",
-    "股票", "基金", "量化", "趋势", "价值", "成长", "稳健", "进取",
-    "逍遥", "淡然", "沉稳", "静心", "睿智", "致远", "宁静", "守拙",
-  ],
-  suffixes: [
-    "爱好者", "学习者", "实践者", "探索者", "研究者", "观察者",
-    "记录者", "分享者", "复盘者", "思考者", "修行者", "感悟者",
-  ],
-};
-
-// 生成中文风格名字
-function generateChineseName(): string {
-  const adj = CHINESE_NAMES.adjectives[Math.floor(Math.random() * CHINESE_NAMES.adjectives.length)];
-  const noun = CHINESE_NAMES.nouns[Math.floor(Math.random() * CHINESE_NAMES.nouns.length)];
-  return `${adj}${noun}`;
-}
-
-// 生成英文风格名字
-function generateEnglishName(): string {
-  const name = ENGLISH_NAMES[Math.floor(Math.random() * ENGLISH_NAMES.length)];
-  // 50% 概率加数字后缀
-  if (Math.random() < 0.5) {
-    return `${name}${Math.floor(Math.random() * 99) + 1}`;
-  }
-  return name;
-}
-
-// 生成组合风格名字
-function generateMixedName(): string {
-  const prefix = MIXED_NAMES.prefixes[Math.floor(Math.random() * MIXED_NAMES.prefixes.length)];
-  const suffix = MIXED_NAMES.suffixes[Math.floor(Math.random() * MIXED_NAMES.suffixes.length)];
-  return `${prefix}${suffix}`;
+// 生成海洋生物风格名字（与 /api/agent/register 保持一致）
+export function generateAgentName(): string {
+  const prefix = MARINE_NAMES[Math.floor(Math.random() * MARINE_NAMES.length)];
+  // 生成4位随机十六进制后缀
+  const suffix = Math.floor(Math.random() * 65536).toString(16).padStart(4, '0');
+  return `${prefix}_${suffix}`;
 }
 
 // ==================== 工具函数 ====================
@@ -593,23 +541,6 @@ export function generateComment(postTopic: string) {
     content,
     qualityScore,
   };
-}
-
-// 生成自然的匿名用户名
-export function generateAgentName(): string {
-  // 随机选择一种风格
-  const style = Math.random();
-  
-  if (style < 0.4) {
-    // 40% 中文诗意风格
-    return generateChineseName();
-  } else if (style < 0.7) {
-    // 30% 英文风格
-    return generateEnglishName();
-  } else {
-    // 30% 组合风格
-    return generateMixedName();
-  }
 }
 
 export function getRandomDelay(baseHours: number = 2): number {
