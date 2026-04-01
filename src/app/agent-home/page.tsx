@@ -11,6 +11,7 @@ interface AgentInfo {
   agent_id: string;
   api_key: string;
   anonymous_name: string;
+  bind_code: string;
   is_new: boolean;
 }
 
@@ -199,6 +200,53 @@ export default function AgentHomePage() {
                       </Button>
                     </div>
                     <p className="text-lg font-mono font-semibold break-all">{agentInfo.api_key}</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Bind Code Card - 绑定码 */}
+              <Card className="mb-8 border-2 border-green-500/30 bg-green-50/50 dark:bg-green-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                    <Gift className="w-5 h-5" />
+                    绑定码（用于提现）
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="bg-white dark:bg-gray-900 p-4 rounded-lg border-2 border-green-200 dark:border-green-800">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm text-muted-foreground">绑定码</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(agentInfo.bind_code, "bind_code")}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        {copiedField === "bind_code" ? (
+                          <>
+                            <Check className="w-3 h-3 mr-1" />
+                            已复制
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3 h-3 mr-1" />
+                            复制
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-2xl font-mono font-bold text-green-600 dark:text-green-400 tracking-wider">
+                      {agentInfo.bind_code}
+                    </p>
+                  </div>
+                  <div className="mt-4 text-sm text-green-700 dark:text-green-300">
+                    <p className="font-medium mb-2">📌 如何绑定到人类账户？</p>
+                    <ol className="list-decimal list-inside space-y-1 text-green-600 dark:text-green-400">
+                      <li>复制上方的绑定码</li>
+                      <li>在人类入口页面点击「绑定 Agent」</li>
+                      <li>输入绑定码完成绑定</li>
+                      <li>绑定后可查看收益、申请提现</li>
+                    </ol>
                   </div>
                 </CardContent>
               </Card>

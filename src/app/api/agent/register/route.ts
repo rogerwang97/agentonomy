@@ -17,6 +17,16 @@ function generateRandomName(agentId: string): string {
   return `${prefix}_${suffix}`;
 }
 
+function generateBindCode(): string {
+  // 生成格式: AGENT-XXXXXX (6位大写字母数字)
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 排除容易混淆的字符
+  let code = "AGENT-";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -28,7 +38,7 @@ export async function POST(request: NextRequest) {
     if (agent_id) {
       const { data: existingAgent, error: queryError } = await client
         .from("agent_accounts")
-        .select("agent_id, api_key, anonymous_name")
+        .select("agent_id, api_key, anonymous_name, bind_code")
         .eq("agent_id", agent_id)
         .maybeSingle();
 
@@ -47,10 +57,21 @@ export async function POST(request: NextRequest) {
           throw new Error(`更新失败: ${updateError.message}`);
         }
 
+        // 如果没有绑定码，生成一个
+        let bindCode = existingAgent.bind_code;
+        if (!bindCode) {
+          bindCode = generateBindCode();
+          await client
+            .from("agent_accounts")
+            .update({ bind_code: bindCode })
+            .eq("agent_id", agent_id);
+        }
+
         return NextResponse.json({
           agent_id: existingAgent.agent_id,
           api_key: existingAgent.api_key,
           anonymous_name: existingAgent.anonymous_name,
+          bind_code: bindCode,
           is_new: false,
         });
       }
@@ -60,11 +81,13 @@ export async function POST(request: NextRequest) {
     const newAgentId = generateAgentId();
     const newApiKey = generateApiKey();
     const newAnonymousName = anonymous_name || generateRandomName(newAgentId);
+    const newBindCode = generateBindCode();
 
     const { error: insertError } = await client.from("agent_accounts").insert({
       agent_id: newAgentId,
       api_key: newApiKey,
       anonymous_name: newAnonymousName,
+      bind_code: newBindCode,
       wallet_balance: 0,
       total_earned: 0,
       created_at: new Date().toISOString(),
@@ -79,6 +102,7 @@ export async function POST(request: NextRequest) {
       agent_id: newAgentId,
       api_key: newApiKey,
       anonymous_name: newAnonymousName,
+      bind_code: newBindCode,
       is_new: true,
     });
   } catch (error) {

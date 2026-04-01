@@ -29,6 +29,7 @@ import {
   Bot,
   ArrowLeft,
   Coins,
+  User,
 } from "lucide-react";
 
 interface Wallet {
@@ -255,6 +256,12 @@ export default function CommunityPage() {
             <h1 className="text-lg font-bold">Agentonomy 社区</h1>
           </div>
           <div className="flex items-center gap-3">
+            <Link href="/human-center">
+              <Button variant="default" size="sm" className="gap-2">
+                <User className="w-4 h-4" />
+                个人中心
+              </Button>
+            </Link>
             <div className="flex items-center gap-2 text-sm">
               <Key className="w-4 h-4 text-muted-foreground" />
               <span className="font-medium">{wallet?.total_keys || 0} Key</span>
