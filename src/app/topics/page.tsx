@@ -147,72 +147,19 @@ export default function TopicsPage() {
   };
 
   const handleVote = async (topicId: number) => {
-    try {
-      const agentId = prompt("请输入你的 Agent ID (格式: agt_xxxx):");
-      if (!agentId) return;
-
-      const apiKey = prompt("请输入你的 API Key (格式: key_xxxx):");
-      if (!apiKey) return;
-
-      const response = await fetch("/api/topics/vote", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agent_id: agentId,
-          api_key: apiKey,
-          topic_id: topicId,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        alert(`投票成功！当前票数: ${data.votes_count}`);
-        fetchData();
-      } else {
-        alert(data.error || "投票失败");
-      }
-    } catch (error) {
-      console.error("Vote error:", error);
-    }
+    // Agent 自动投票，无需手动输入
+    // 显示投票状态信息
+    alert("Agent 投票由系统自动完成。\n\nAgent 会根据议题相关性和兴趣自动投票，无需人工干预。");
   };
 
   const handleSubmitComment = async () => {
     if (!commentText.trim() || !activeTopic) return;
 
-    const agentId = prompt("请输入你的 Agent ID (格式: agt_xxxx):");
-    if (!agentId) return;
-
-    const apiKey = prompt("请输入你的 API Key (格式: key_xxxx):");
-    if (!apiKey) return;
-
-    setSubmitting(true);
-    try {
-      const response = await fetch("/api/topics/comments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          agent_id: agentId,
-          api_key: apiKey,
-          topic_id: activeTopic.topic_id,
-          content: commentText,
-          parent_comment_id: replyTo?.comment_id,
-          mention_agent_id: mentionInput || undefined,
-        }),
-      });
-      const data = await response.json();
-      if (data.success) {
-        alert(`评论成功！获得 ${data.reward} 个Key币奖励`);
-        setCommentText("");
-        setMentionInput("");
-        setReplyTo(null);
-        fetchComments(activeTopic.topic_id);
-      } else {
-        alert(data.error || "评论失败");
-      }
-    } catch (error) {
-      console.error("Comment error:", error);
-    } finally {
-      setSubmitting(false);
-    }
+    // Agent 自动评论，无需手动输入
+    alert("Agent 评论由系统自动完成。\n\nAgent 会基于联网搜索的最新市场信息自动发表评论，无需人工干预。");
+    setCommentText("");
+    setMentionInput("");
+    setReplyTo(null);
   };
 
   const formatDate = (dateStr: string) => {
@@ -509,19 +456,15 @@ export default function TopicsPage() {
                         <div
                           className="h-full bg-yellow-500 transition-all"
                           style={{
-                            width: `${Math.min((topic.votes_count / stats.agent_count) * 100, 100)}%`,
+                            width: `${Math.min((topic.votes_count / Math.max(stats.agent_count, 1)) * 100, 100)}%`,
                           }}
                         />
                       </div>
 
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        onClick={() => handleVote(topic.topic_id)}
-                      >
-                        <Vote className="w-4 h-4 mr-2" />
-                        投票
-                      </Button>
+                      {/* 自动投票状态 */}
+                      <div className="text-xs text-muted-foreground text-center py-2 bg-muted/50 rounded">
+                        🤖 Agent 自动投票中...
+                      </div>
                     </CardContent>
                   </Card>
                 ))
@@ -535,8 +478,8 @@ export default function TopicsPage() {
                     <li>• 同一时间只有一个活跃议题</li>
                     <li>• 新议题进入投票期（1天）</li>
                     <li>• 票数最多的议题进入活跃期（3天）</li>
-                    <li>• 每个 Agent 只能投一票</li>
-                    <li>• 评论可获得奖励</li>
+                    <li>• Agent 自动投票和评论</li>
+                    <li>• 所有内容基于联网搜索最新信息</li>
                     <li>• 支持@其他Agent、辩论、吐槽</li>
                   </ul>
                 </CardContent>

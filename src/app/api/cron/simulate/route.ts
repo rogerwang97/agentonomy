@@ -37,26 +37,47 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json().catch(() => ({}));
-    const action = body.action || 'auto'; // auto, post, comment
+    const action = body.action || 'auto'; // auto, post, comment, topic
 
-    let result: { posts?: number; comments?: number; message: string };
+    const results = {
+      posts: 0,
+      comments: 0,
+      topic_votes: 0,
+      topic_comments: 0,
+      messages: [] as string[],
+    };
 
-    if (action === 'auto') {
-      // 随机决定是发帖还是评论（70%发帖，30%评论）
-      const shouldPost = Math.random() < 0.7;
-      
-      if (shouldPost) {
-        result = await createPost();
-      } else {
-        result = await createComment();
+    // 同时执行多种活动（策略发帖 + 议题活动）
+    if (action === 'auto' || action === 'post') {
+      try {
+        const postResult = await createPost();
+        results.posts = postResult.posts || 0;
+        results.comments = postResult.comments || 0;
+        results.messages.push(postResult.message);
+      } catch (error) {
+        console.error('Post creation failed:', error);
       }
-    } else if (action === 'post') {
-      result = await createPost();
-    } else {
-      result = await createComment();
     }
 
-    return NextResponse.json({ success: true, ...result });
+    // 议题活动（投票 + 评论）
+    if (action === 'auto' || action === 'topic') {
+      try {
+        const topicResult = await participateInTopics();
+        results.topic_votes = topicResult.votes;
+        results.topic_comments = topicResult.comments;
+        if (topicResult.message) {
+          results.messages.push(topicResult.message);
+        }
+      } catch (error) {
+        console.error('Topic participation failed:', error);
+      }
+    }
+
+    return NextResponse.json({ 
+      success: true, 
+      ...results,
+      message: results.messages.join(' | '),
+    });
   } catch (error) {
     console.error('Cron error:', error);
     return NextResponse.json(
@@ -90,6 +111,11 @@ export async function GET(request: NextRequest) {
     .from('comments')
     .select('*', { count: 'exact', head: true });
 
+  const { count: votingTopics } = await client
+    .from('discussion_topics')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'voting');
+
   return NextResponse.json({
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -97,6 +123,7 @@ export async function GET(request: NextRequest) {
       agents: agentCount || 0,
       posts: postCount || 0,
       comments: commentCount || 0,
+      voting_topics: votingTopics || 0,
     },
   });
 }
@@ -153,7 +180,7 @@ async function createPost(): Promise<{ posts: number; comments?: number; message
       quality_score: postData.qualityScore,
       view_count: 0,
       reward_paid: false,
-      bounty_amount: postData.bountyAmount,
+      bounty_amount: postData.bountyAmount || 0,
       bounty_paid: false,
     })
     .select()
@@ -186,33 +213,149 @@ async function createPost(): Promise<{ posts: number; comments?: number; message
   };
 }
 
-async function createComment(): Promise<{ posts?: number; comments: number; message: string }> {
+// 参与议题活动（自动投票 + 评论）
+async function participateInTopics(): Promise<{ votes: number; comments: number; message?: string }> {
   const client = getClient();
-  
-  // 获取一个已有的帖子
-  const { data: posts } = await client
-    .from('posts')
-    .select('post_id, content')
-    .order('created_at', { ascending: false })
-    .limit(10);
+  const results = { votes: 0, comments: 0, message: '' };
 
-  if (!posts || posts.length === 0) {
-    // 没有帖子，先创建一个
-    const postResult = await createPost();
-    return { ...postResult, comments: 0 };
+  try {
+    // 1. 检查是否有投票中的议题，自动投票
+    const { data: votingTopics } = await client
+      .from('discussion_topics')
+      .select('*')
+      .eq('status', 'voting')
+      .order('created_at', { ascending: false });
+
+    if (votingTopics && votingTopics.length > 0) {
+      // 获取所有未投票的Agent
+      for (const topic of votingTopics) {
+        // 获取已投票的Agent
+        const { data: votedAgents } = await client
+          .from('topic_votes')
+          .select('agent_id')
+          .eq('topic_id', topic.topic_id);
+
+        const votedAgentIds = new Set(votedAgents?.map(v => v.agent_id) || []);
+
+        // 获取未投票的Agent
+        const { data: agents } = await client
+          .from('agent_accounts')
+          .select('agent_id, api_key, anonymous_name')
+          .limit(20);
+
+        if (agents && agents.length > 0) {
+          const unvotedAgents = agents.filter(a => !votedAgentIds.has(a.agent_id));
+          
+          // 随机选择30-50%的未投票Agent进行投票
+          const voteCount = Math.floor(unvotedAgents.length * (0.3 + Math.random() * 0.2));
+          const voters = unvotedAgents.slice(0, Math.min(voteCount, 5)); // 每次最多5票
+
+          for (const voter of voters) {
+            try {
+              // 插入投票记录
+              const { error: voteError } = await client
+                .from('topic_votes')
+                .insert({
+                  topic_id: topic.topic_id,
+                  agent_id: voter.agent_id,
+                });
+
+              if (!voteError) {
+                // 更新投票计数
+                await client
+                  .from('discussion_topics')
+                  .update({ votes_count: (topic.votes_count || 0) + 1 })
+                  .eq('topic_id', topic.topic_id);
+
+                results.votes++;
+                console.log(`[自动投票] ${voter.anonymous_name} 投票给议题 #${topic.topic_id}`);
+              }
+            } catch {
+              // 忽略投票失败
+            }
+          }
+        }
+      }
+    }
+
+    // 2. 检查是否有活跃议题，自动评论
+    const { data: activeTopics } = await client
+      .from('discussion_topics')
+      .select('*')
+      .eq('status', 'active')
+      .limit(1);
+
+    if (activeTopics && activeTopics.length > 0) {
+      const topic = activeTopics[0];
+      
+      // 获取已参与的Agent
+      const { data: participants } = await client
+        .from('topic_participants')
+        .select('agent_id')
+        .eq('topic_id', topic.topic_id);
+
+      const participantIds = new Set(participants?.map(p => p.agent_id) || []);
+
+      // 获取未参与的Agent
+      const { data: agents } = await client
+        .from('agent_accounts')
+        .select('agent_id, api_key, anonymous_name, wallet_balance')
+        .gte('wallet_balance', 3)
+        .limit(10);
+
+      if (agents && agents.length > 0) {
+        const nonParticipants = agents.filter(a => !participantIds.has(a.agent_id));
+        
+        if (nonParticipants.length > 0) {
+          // 随机选择一个Agent参与讨论
+          const agent = nonParticipants[Math.floor(Math.random() * nonParticipants.length)];
+          
+          // 调用议题评论API（会自动联网搜索）
+          try {
+            const response = await fetch(`${process.env.COZE_PROJECT_DOMAIN_DEFAULT || 'http://localhost:5000'}/api/topics/comments`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                agent_id: agent.agent_id,
+                api_key: agent.api_key,
+                topic_id: topic.topic_id,
+                content: `我对这个议题很感兴趣，${topic.market_focus}市场确实值得关注。从当前的市场环境来看，需要综合考虑多方面因素。`,
+              }),
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              results.comments++;
+              results.message = `${agent.anonymous_name} 参与了议题讨论`;
+              console.log(`[议题评论] ${agent.anonymous_name} 参与了议题 #${topic.topic_id}`);
+            }
+          } catch (error) {
+            console.error('Topic comment failed:', error);
+          }
+        }
+      }
+    }
+
+    // 3. 如果没有活跃议题，触发生命周期管理
+    if (!activeTopics || activeTopics.length === 0) {
+      try {
+        await fetch(`${process.env.COZE_PROJECT_DOMAIN_DEFAULT || 'http://localhost:5000'}/api/topics/lifecycle`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${CRON_SECRET}`,
+          },
+        });
+      } catch {
+        // 忽略生命周期管理错误
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Participate in topics error:', error);
+    return results;
   }
-
-  const targetPost = posts[Math.floor(Math.random() * posts.length)];
-  
-  // 从内容中提取主题
-  const topic = targetPost.content.split('。')[0].substring(0, 20);
-  
-  await createCommentForPost(client, targetPost.post_id, topic);
-
-  return {
-    comments: 1,
-    message: `新评论已添加到帖子 #${targetPost.post_id}`,
-  };
 }
 
 async function createCommentForPost(client: ReturnType<typeof getSupabaseClient>, postId: number, topic: string): Promise<void> {
@@ -252,46 +395,51 @@ async function createCommentForPost(client: ReturnType<typeof getSupabaseClient>
     .eq('agent_id', agent.agent_id);
 }
 
-async function getOrCreateAgent(client: ReturnType<typeof getSupabaseClient>): Promise<{ agent_id: string; anonymous_name: string; wallet_balance: number; total_earned: number }> {
-  // 获取现有 Agent 数量
-  const { count } = await client
+async function getOrCreateAgent(client: ReturnType<typeof getSupabaseClient>): Promise<{
+  agent_id: string;
+  api_key: string;
+  anonymous_name: string;
+  wallet_balance: number;
+  total_earned: number;
+}> {
+  // 获取现有 Agent 列表
+  const { data: existingAgents } = await client
     .from('agent_accounts')
-    .select('*', { count: 'exact', head: true });
+    .select('*')
+    .order('last_active_at', { ascending: false })
+    .limit(20);
 
-  // 如果有 Agent，50% 概率复用现有 Agent
-  if (count && count > 0 && Math.random() < 0.5) {
-    const { data: agents } = await client
-      .from('agent_accounts')
-      .select('agent_id, anonymous_name, wallet_balance, total_earned')
-      .order('last_active_at', { ascending: false })
-      .limit(10);
-
-    if (agents && agents.length > 0) {
-      return agents[Math.floor(Math.random() * agents.length)];
+  if (existingAgents && existingAgents.length > 0) {
+    // 80% 概率使用现有 Agent，20% 概率创建新 Agent
+    if (Math.random() < 0.8) {
+      return existingAgents[Math.floor(Math.random() * existingAgents.length)];
     }
   }
 
   // 创建新 Agent
-  const anonymousName = generateAgentName();
   const agentId = generateAgentId();
   const apiKey = generateApiKey();
+  const anonymousName = generateAgentName();
 
-  const { error: agentError } = await client
+  const { data: newAgent, error } = await client
     .from('agent_accounts')
     .insert({
       agent_id: agentId,
       api_key: apiKey,
       anonymous_name: anonymousName,
-      wallet_balance: 0,
+      wallet_balance: 10, // 初始赠送 10 个 Key币
       total_earned: 0,
-      created_at: new Date().toISOString(),
-      last_active_at: new Date().toISOString(),
-    });
+    })
+    .select()
+    .single();
 
-  if (agentError) {
-    console.error('Agent creation error:', agentError);
-    throw agentError;
+  if (error || !newAgent) {
+    // 如果创建失败，使用现有 Agent
+    if (existingAgents && existingAgents.length > 0) {
+      return existingAgents[0];
+    }
+    throw new Error('Failed to create or get agent');
   }
 
-  return { agent_id: agentId, anonymous_name: anonymousName, wallet_balance: 0, total_earned: 0 };
+  return newAgent;
 }
